@@ -1,376 +1,199 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-
-type Language = "en" | "vi";
-type Bilingual = { en: string; vi: string };
-
-const tracks: Array<{
-  number: string;
-  title: Bilingual;
-  description: Bilingual;
-  topics: Bilingual[];
-  tone: string;
-}> = [
-  {
-    number: "01",
-    title: { en: "Foundations", vi: "Nền tảng" },
-    description: {
-      en: "Learn to reason about programs before trying to make them fast.",
-      vi: "Học cách suy luận về chương trình trước khi cố gắng làm nó chạy nhanh.",
-    },
-    topics: [
-      { en: "Big O & growth rates", vi: "Big O & tốc độ tăng" },
-      { en: "Recursion & invariants", vi: "Đệ quy & bất biến" },
-      { en: "Discrete math", vi: "Toán rời rạc" },
-      { en: "Probability basics", vi: "Xác suất cơ bản" },
-    ],
-    tone: "coral",
-  },
-  {
-    number: "02",
-    title: { en: "Data structures", vi: "Cấu trúc dữ liệu" },
-    description: {
-      en: "Choose how data lives so the operations you need become cheap.",
-      vi: "Chọn cách lưu dữ liệu để các thao tác cần thiết trở nên hiệu quả.",
-    },
-    topics: [
-      { en: "Arrays & linked lists", vi: "Mảng & danh sách liên kết" },
-      { en: "Stacks, queues & heaps", vi: "Ngăn xếp, hàng đợi & heap" },
-      { en: "Hash tables", vi: "Bảng băm" },
-      { en: "Trees, tries & graphs", vi: "Cây, trie & đồ thị" },
-    ],
-    tone: "blue",
-  },
-  {
-    number: "03",
-    title: { en: "Core algorithms", vi: "Thuật toán cốt lõi" },
-    description: {
-      en: "Master the reusable patterns behind most interview and production problems.",
-      vi: "Làm chủ các mẫu tư duy dùng lại trong phỏng vấn và sản phẩm thực tế.",
-    },
-    topics: [
-      { en: "Search & sorting", vi: "Tìm kiếm & sắp xếp" },
-      { en: "Two pointers & windows", vi: "Hai con trỏ & cửa sổ trượt" },
-      { en: "Greedy & divide-conquer", vi: "Tham lam & chia để trị" },
-      { en: "Dynamic programming", vi: "Quy hoạch động" },
-    ],
-    tone: "yellow",
-  },
-  {
-    number: "04",
-    title: { en: "Graph & systems", vi: "Đồ thị & hệ thống" },
-    description: {
-      en: "Connect algorithmic thinking to networks, databases, and operating systems.",
-      vi: "Kết nối tư duy thuật toán với mạng, cơ sở dữ liệu và hệ điều hành.",
-    },
-    topics: [
-      { en: "BFS, DFS & shortest paths", vi: "BFS, DFS & đường đi ngắn nhất" },
-      { en: "MST & topological sort", vi: "Cây khung nhỏ nhất & sắp xếp topo" },
-      { en: "Concurrency & scheduling", vi: "Đồng thời & lập lịch" },
-      { en: "Indexes, caches & consensus", vi: "Chỉ mục, bộ nhớ đệm & đồng thuận" },
-    ],
-    tone: "green",
-  },
-  {
-    number: "05",
-    title: { en: "Classical ML", vi: "Học máy cổ điển" },
-    description: {
-      en: "Understand models from their objective functions—not as black boxes.",
-      vi: "Hiểu mô hình từ hàm mục tiêu — không xem chúng như hộp đen.",
-    },
-    topics: [
-      { en: "Linear & logistic regression", vi: "Hồi quy tuyến tính & logistic" },
-      { en: "Trees, forests & boosting", vi: "Cây, rừng & boosting" },
-      { en: "SVM, k-NN & Naive Bayes", vi: "SVM, k-NN & Naive Bayes" },
-      { en: "Clustering & PCA", vi: "Phân cụm & PCA" },
-    ],
-    tone: "violet",
-  },
-  {
-    number: "06",
-    title: { en: "Deep learning & beyond", vi: "Học sâu & mở rộng" },
-    description: {
-      en: "Build the bridge from gradients to transformers, evaluation, and responsible AI.",
-      vi: "Xây cầu nối từ gradient đến transformer, đánh giá và AI có trách nhiệm.",
-    },
-    topics: [
-      { en: "Backpropagation & optimizers", vi: "Lan truyền ngược & bộ tối ưu" },
-      { en: "CNNs, RNNs & attention", vi: "CNN, RNN & attention" },
-      { en: "Transformers & embeddings", vi: "Transformer & embedding" },
-      { en: "MLOps, safety & evaluation", vi: "MLOps, an toàn & đánh giá" },
-    ],
-    tone: "pink",
-  },
-];
-
-const algorithms = [
-  {
-    id: "binary",
-    name: "Binary search",
-    viName: "Tìm kiếm nhị phân",
-    family: "Search",
-    complexity: "O(log n)",
-    en: "Repeatedly discard half of a sorted search space. The sorted-data precondition is the detail people most often forget.",
-    vi: "Liên tục loại bỏ một nửa không gian tìm kiếm đã sắp xếp. Điều kiện dữ liệu đã sắp xếp là chi tiết dễ bị quên nhất.",
-    code: `def binary_search(a, target):\n    lo, hi = 0, len(a) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if a[mid] == target: return mid\n        if a[mid] < target: lo = mid + 1\n        else: hi = mid - 1\n    return -1`,
-  },
-  {
-    id: "merge",
-    name: "Merge sort",
-    viName: "Sắp xếp trộn",
-    family: "Divide & conquer",
-    complexity: "O(n log n)",
-    en: "Split, solve each half, then merge two sorted results. It is stable and predictable, but needs extra memory.",
-    vi: "Chia đôi, giải từng nửa, rồi trộn hai kết quả đã sắp xếp. Thuật toán ổn định và dễ dự đoán nhưng cần thêm bộ nhớ.",
-    code: `def merge_sort(a):\n    if len(a) <= 1: return a\n    m = len(a) // 2\n    left = merge_sort(a[:m])\n    right = merge_sort(a[m:])\n    return merge(left, right)`,
-  },
-  {
-    id: "bfs",
-    name: "Breadth-first search",
-    viName: "Tìm kiếm theo chiều rộng",
-    family: "Graph",
-    complexity: "O(V + E)",
-    en: "Explore a graph layer by layer with a queue. In an unweighted graph, the first path found to a node is a shortest path.",
-    vi: "Duyệt đồ thị theo từng lớp bằng hàng đợi. Trong đồ thị không trọng số, đường đầu tiên tới một đỉnh là đường ngắn nhất.",
-    code: `from collections import deque\n\ndef bfs(graph, start):\n    seen, q = {start}, deque([start])\n    while q:\n        node = q.popleft()\n        yield node\n        for nxt in graph[node]:\n            if nxt not in seen:\n                seen.add(nxt); q.append(nxt)`,
-  },
-  {
-    id: "gradient",
-    name: "Gradient descent",
-    viName: "Hạ gradient",
-    family: "Optimization",
-    complexity: "Iterative",
-    en: "Move parameters opposite the loss gradient. Learning rate controls the step: too small is slow; too large may diverge.",
-    vi: "Di chuyển tham số ngược hướng gradient của hàm mất mát. Learning rate quyết định bước đi: quá nhỏ thì chậm, quá lớn có thể phân kỳ.",
-    code: `def gradient_descent(theta, grad, lr=0.01, steps=1000):\n    for _ in range(steps):\n        g = grad(theta)\n        theta = [t - lr * dt for t, dt in zip(theta, g)]\n    return theta`,
-  },
-];
-
-const roadmap = [
-  { weeks: "01—04", en: "Python, math, Big O, recursion", vi: "Python, toán, Big O, đệ quy" },
-  { weeks: "05—08", en: "Data structures and sorting", vi: "Cấu trúc dữ liệu và sắp xếp" },
-  { weeks: "09—12", en: "Graphs, greedy, dynamic programming", vi: "Đồ thị, tham lam, quy hoạch động" },
-  { weeks: "13—16", en: "Probability, linear algebra, optimization", vi: "Xác suất, đại số tuyến tính, tối ưu" },
-  { weeks: "17—20", en: "Classical machine learning", vi: "Học máy cổ điển" },
-  { weeks: "21—24", en: "Deep learning and one capstone", vi: "Học sâu và một đồ án tổng kết" },
-];
+import { HeroDemo } from "./components/HeroDemo";
+import { ModuleThumb } from "./components/ModuleThumb";
+import { useApp } from "./components/Providers";
+import { categories, modules } from "./lib/registry";
+import type { Bilingual, Category } from "./lib/types";
+import { b } from "./lib/types";
 
 const copy = {
-  en: {
-    nav: ["Curriculum", "Algorithms", "Roadmap"],
-    eyebrow: "A bilingual field guide to computer science",
-    titleA: "Learn the ideas.",
-    titleB: "Build the intuition.",
-    hero: "From your first array to gradient descent and transformers—one connected path, explained in English and Vietnamese.",
-    start: "Start the curriculum",
-    github: "View on GitHub",
-    stats: ["6 learning tracks", "24-week path", "Bilingual notes"],
-    curriculumKicker: "The complete map",
-    curriculumTitle: "Computer science is a system of connected ideas.",
-    curriculumIntro: "Follow the tracks in order, or use them as a map when you need a specific concept.",
-    coreKicker: "Core algorithm lab",
-    coreTitle: "Read the invariant, then read the code.",
-    coreIntro: "An algorithm is not a spell. Ask what stays true, what gets smaller, and what the machine pays for.",
-    invariant: "Mental model",
-    complexityTitle: "Complexity is a forecast, not a stopwatch.",
-    complexityBody: "Big O describes how resource use grows as input grows. Constants still matter in practice, but growth rate tells you what survives scale.",
-    roadmapKicker: "A practical pace",
-    roadmapTitle: "Twenty-four weeks. One durable foundation.",
-    roadmapBody: "Study 7–10 hours each week: learn the idea, implement it without a library, solve three problems, then explain it aloud in both languages.",
-    ritual: "Weekly ritual",
-    ritualItems: ["Learn one mental model", "Implement from scratch", "Test edge cases", "Explain EN ↔ VI"],
-    repoKicker: "Learn in public",
-    repoTitle: "The website is the map. GitHub is the workshop.",
-    repoBody: "Every topic belongs with source code, tests, exercises, and bilingual notes. Clone it, break it, fix it, and record what surprised you.",
-    repoButton: "Open the repository",
-    footer: "Built as an open, growing study guide—not a claim that learning ever ends.",
-  },
-  vi: {
-    nav: ["Chương trình", "Thuật toán", "Lộ trình"],
-    eyebrow: "Cẩm nang song ngữ về khoa học máy tính",
-    titleA: "Hiểu ý tưởng.",
-    titleB: "Xây trực giác.",
-    hero: "Từ mảng đầu tiên đến hạ gradient và transformer—một lộ trình kết nối, giải thích bằng tiếng Anh và tiếng Việt.",
-    start: "Bắt đầu học",
-    github: "Xem trên GitHub",
-    stats: ["6 mảng kiến thức", "Lộ trình 24 tuần", "Ghi chú song ngữ"],
-    curriculumKicker: "Bản đồ toàn diện",
-    curriculumTitle: "Khoa học máy tính là một hệ thống các ý tưởng liên kết.",
-    curriculumIntro: "Học theo thứ tự, hoặc dùng như bản đồ khi bạn cần một khái niệm cụ thể.",
-    coreKicker: "Phòng lab thuật toán",
-    coreTitle: "Đọc bất biến, rồi đọc mã nguồn.",
-    coreIntro: "Thuật toán không phải câu thần chú. Hãy hỏi điều gì luôn đúng, điều gì nhỏ dần và máy tính phải trả giá gì.",
-    invariant: "Mô hình tư duy",
-    complexityTitle: "Độ phức tạp là dự báo, không phải đồng hồ bấm giờ.",
-    complexityBody: "Big O mô tả mức tăng tài nguyên khi đầu vào tăng. Hằng số vẫn quan trọng, nhưng tốc độ tăng cho biết giải pháp nào chịu được quy mô lớn.",
-    roadmapKicker: "Nhịp học thực tế",
-    roadmapTitle: "Hai mươi bốn tuần. Một nền tảng bền vững.",
-    roadmapBody: "Học 7–10 giờ mỗi tuần: hiểu ý tưởng, tự cài đặt không dùng thư viện, giải ba bài tập, rồi tự giải thích bằng cả hai ngôn ngữ.",
-    ritual: "Thói quen hằng tuần",
-    ritualItems: ["Học một mô hình tư duy", "Tự cài đặt", "Kiểm thử trường hợp biên", "Giải thích EN ↔ VI"],
-    repoKicker: "Học công khai",
-    repoTitle: "Website là bản đồ. GitHub là xưởng thực hành.",
-    repoBody: "Mỗi chủ đề đi cùng mã nguồn, kiểm thử, bài tập và ghi chú song ngữ. Hãy clone, làm hỏng, sửa lại và ghi điều khiến bạn bất ngờ.",
-    repoButton: "Mở kho mã nguồn",
-    footer: "Một cẩm nang học tập mở và luôn phát triển—vì việc học không bao giờ kết thúc.",
-  },
+  eyebrow: b("A bilingual field guide to computer science", "Cẩm nang song ngữ về khoa học máy tính"),
+  titleA: b("Learn the ideas.", "Hiểu ý tưởng."),
+  titleB: b("Watch them work.", "Xem chúng vận hành."),
+  hero: b(
+    "Step through sorting, searching, trees, graphs, dynamic programming and machine learning one decision at a time — with pseudocode, live variables, real-world uses and practice problems. In English and Vietnamese.",
+    "Đi từng bước qua sắp xếp, tìm kiếm, cây, đồ thị, quy hoạch động và học máy — với mã giả, biến trực tiếp, ứng dụng thực tế và bài luyện tập. Bằng tiếng Anh và tiếng Việt.",
+  ),
+  start: b("Start visualizing", "Bắt đầu trực quan hoá"),
+  github: b("View on GitHub", "Xem trên GitHub"),
+  stats: [b("interactive visualisations", "mô phỏng tương tác"), b("learning tracks", "mảng kiến thức"), b("languages: EN · VI", "ngôn ngữ: EN · VI")],
+  catalogKicker: b("Visualisation library", "Thư viện mô phỏng"),
+  catalogTitle: b("Pick an algorithm. Press play. Then break it.", "Chọn thuật toán. Nhấn phát. Rồi thử phá nó."),
+  catalogIntro: b("Every module lets you feed your own input, scrub through each step, and see exactly which line of pseudocode is running.", "Mỗi module cho phép nhập dữ liệu của bạn, tua từng bước và thấy chính xác dòng mã giả nào đang chạy."),
+  filter: b("Filter by name, tag or complexity…", "Lọc theo tên, nhãn hoặc độ phức tạp…"),
+  all: b("All", "Tất cả"),
+  none: b("Nothing matches that filter yet.", "Chưa có gì khớp bộ lọc này."),
+  loopKicker: b("How every lesson works", "Cách mỗi bài học vận hành"),
+  loopTitle: b("Watch → Trace → Apply → Test", "Xem → Lần vết → Áp dụng → Kiểm tra"),
+  loop: [
+    { t: b("Watch", "Xem"), d: b("Run the animation on default data to build a picture of the idea.", "Chạy mô phỏng với dữ liệu mặc định để hình dung ý tưởng.") },
+    { t: b("Trace", "Lần vết"), d: b("Pause. Step forward and back. Predict the next highlighted line before you see it.", "Tạm dừng. Tiến lùi từng bước. Đoán dòng sáng tiếp theo trước khi thấy.") },
+    { t: b("Apply", "Áp dụng"), d: b("Read where it is used in real systems and how to recognise it in a problem statement.", "Đọc nơi nó được dùng trong hệ thống thật và cách nhận ra nó trong đề bài.") },
+    { t: b("Test", "Kiểm tra"), d: b("Answer the quiz, try edge-case inputs, then solve the practice problems in order.", "Trả lời câu hỏi, thử đầu vào biên, rồi giải bài luyện tập theo thứ tự.") },
+  ],
+  roadmapKicker: b("A practical pace", "Nhịp học thực tế"),
+  roadmapTitle: b("Twenty-four weeks. One durable foundation.", "Hai mươi bốn tuần. Một nền tảng bền vững."),
+  roadmapBody: b(
+    "Study 7–10 hours each week: learn the idea, implement it without a library, solve three problems, then explain it aloud in both languages.",
+    "Học 7–10 giờ mỗi tuần: hiểu ý tưởng, tự cài đặt không dùng thư viện, giải ba bài tập, rồi tự giải thích bằng cả hai ngôn ngữ.",
+  ),
+  repoKicker: b("Learn in public", "Học công khai"),
+  repoTitle: b("The website is the map. GitHub is the workshop.", "Website là bản đồ. GitHub là xưởng thực hành."),
+  repoBody: b(
+    "Every topic has Python source, tests and bilingual notes. Clone it, break it, fix it, and record what surprised you.",
+    "Mỗi chủ đề có mã nguồn Python, kiểm thử và ghi chú song ngữ. Hãy clone, làm hỏng, sửa lại và ghi điều khiến bạn bất ngờ.",
+  ),
+  repoButton: b("Open the repository", "Mở kho mã nguồn"),
 };
 
-const growth = [
-  ["O(1)", "Hash lookup", "Tra cứu bảng băm"],
-  ["O(log n)", "Binary search", "Tìm kiếm nhị phân"],
-  ["O(n)", "Linear scan", "Duyệt tuyến tính"],
-  ["O(n log n)", "Efficient sorting", "Sắp xếp hiệu quả"],
-  ["O(n²)", "Compare every pair", "So sánh mọi cặp"],
-  ["O(2ⁿ)", "Subset search", "Duyệt tập con"],
+const roadmap: Array<{ weeks: string; title: Bilingual; slugs: string[] }> = [
+  { weeks: "01—04", title: b("Python, Big O, searching patterns", "Python, Big O, các mẫu tìm kiếm"), slugs: ["linear-search", "binary-search", "two-pointers", "sliding-window"] },
+  { weeks: "05—08", title: b("Data structures and sorting", "Cấu trúc dữ liệu và sắp xếp"), slugs: ["stack", "queue", "linked-list", "hash-table", "bubble-sort", "selection-sort", "insertion-sort", "merge-sort", "quick-sort", "counting-sort"] },
+  { weeks: "09—12", title: b("Trees and graphs", "Cây và đồ thị"), slugs: ["binary-search-tree", "binary-heap", "union-find", "graph-traversal", "shortest-paths", "minimum-spanning-tree", "topological-sort"] },
+  { weeks: "13—16", title: b("Dynamic programming and optimisation", "Quy hoạch động và tối ưu"), slugs: ["coin-change", "knapsack", "longest-common-subsequence", "edit-distance", "gradient-descent"] },
+  { weeks: "17—20", title: b("Classical machine learning", "Học máy cổ điển"), slugs: ["linear-regression", "k-means"] },
+  { weeks: "21—24", title: b("Deep learning and one capstone project", "Học sâu và một đồ án tổng kết"), slugs: [] },
 ];
 
+const normalise = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d");
+
 export default function Home() {
-  const [language, setLanguage] = useState<Language>("en");
-  const [activeAlgorithm, setActiveAlgorithm] = useState(algorithms[0].id);
-  const t = copy[language];
-  const selected = useMemo(
-    () => algorithms.find((algorithm) => algorithm.id === activeAlgorithm) ?? algorithms[0],
-    [activeAlgorithm],
-  );
+  const { t } = useApp();
+  const [query, setQuery] = useState("");
+  const [cat, setCat] = useState<Category | "all">("all");
+
+  const filtered = useMemo(() => {
+    const words = normalise(query.trim()).split(/\s+/).filter(Boolean);
+    return modules.filter((m) => {
+      if (cat !== "all" && m.category !== cat) return false;
+      if (!words.length) return true;
+      const hay = normalise([m.title.en, m.title.vi, m.short.en, m.short.vi, m.tags.join(" ")].join(" "));
+      return words.every((w) => hay.includes(w));
+    });
+  }, [query, cat]);
 
   return (
-    <main>
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Algo Atlas home">
-          <span className="brand-mark">A²</span>
-          <span>Algo Atlas</span>
-        </a>
-        <nav aria-label="Primary navigation">
-          <a href="#curriculum">{t.nav[0]}</a>
-          <a href="#algorithms">{t.nav[1]}</a>
-          <a href="#roadmap">{t.nav[2]}</a>
-        </nav>
-        <div className="language-switch" aria-label="Language selector">
-          <button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} aria-pressed={language === "en"}>EN</button>
-          <span>/</span>
-          <button className={language === "vi" ? "active" : ""} onClick={() => setLanguage("vi")} aria-pressed={language === "vi"}>VI</button>
-        </div>
-      </header>
-
+    <>
       <section className="hero" id="top">
         <div className="hero-orbit orbit-one" aria-hidden="true" />
         <div className="hero-orbit orbit-two" aria-hidden="true" />
         <div className="hero-copy">
-          <p className="kicker">{t.eyebrow}</p>
-          <h1>{t.titleA}<br /><em>{t.titleB}</em></h1>
-          <p className="hero-intro">{t.hero}</p>
+          <p className="kicker">{t(copy.eyebrow)}</p>
+          <h1>{t(copy.titleA)}<br /><em>{t(copy.titleB)}</em></h1>
+          <p className="hero-intro">{t(copy.hero)}</p>
           <div className="hero-actions">
-            <a className="button primary" href="#curriculum">{t.start} <span>↓</span></a>
-            <a className="button text-button" href="https://github.com/khaisjsu/algo-atlas" target="_blank" rel="noreferrer">{t.github} <span>↗</span></a>
+            <a className="button primary" href="#catalog">{t(copy.start)} <span>↓</span></a>
+            <a className="button text-button" href="https://github.com/khaisjsu/algo-atlas" target="_blank" rel="noreferrer">{t(copy.github)} <span>↗</span></a>
           </div>
         </div>
-        <div className="hero-code" aria-label="Algorithm pseudocode decoration">
-          <div className="code-bar"><span /><span /><span /></div>
-          <pre><code><b>while</b> learning:{"\n"}  question() {"\n"}  implement() {"\n"}  explain(<i>EN</i>, <i>VI</i>)</code></pre>
-        </div>
+        <HeroDemo />
         <div className="hero-stats">
-          {t.stats.map((stat, index) => <span key={stat}><b>0{index + 1}</b>{stat}</span>)}
+          <span><b>{modules.length}</b>{t(copy.stats[0])}</span>
+          <span><b>{String(categories.length).padStart(2, "0")}</b>{t(copy.stats[1])}</span>
+          <span><b>02</b>{t(copy.stats[2])}</span>
         </div>
       </section>
 
-      <section className="curriculum section" id="curriculum">
+      <section className="catalog section" id="catalog">
         <div className="section-heading">
-          <div><p className="kicker">{t.curriculumKicker}</p><h2>{t.curriculumTitle}</h2></div>
-          <p>{t.curriculumIntro}</p>
+          <div><p className="kicker">{t(copy.catalogKicker)}</p><h2>{t(copy.catalogTitle)}</h2></div>
+          <p>{t(copy.catalogIntro)}</p>
         </div>
-        <div className="track-grid">
-          {tracks.map((track) => (
-            <article className={`track-card ${track.tone}`} key={track.number}>
-              <div className="track-top"><span>{track.number}</span><span className="track-arrow">↗</span></div>
-              <h3>{track.title[language]}</h3>
-              <p>{track.description[language]}</p>
-              <ul>{track.topics.map((topic) => <li key={topic.en}>{topic[language]}</li>)}</ul>
+
+        <div className="catalog-tools">
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t(copy.filter)} aria-label={t(copy.filter)} />
+          <div className="chip-row" role="group" aria-label="Categories">
+            <button className={cat === "all" ? "active" : ""} aria-pressed={cat === "all"} onClick={() => setCat("all")}>{t(copy.all)} <small>{modules.length}</small></button>
+            {categories.map((c) => (
+              <button key={c.id} className={`tone-${c.tone} ${cat === c.id ? "active" : ""}`} aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>
+                {t(c.title)} <small>{modules.filter((m) => m.category === c.id).length}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {categories.map((c) => {
+          const items = filtered.filter((m) => m.category === c.id);
+          if (!items.length) return null;
+          return (
+            <div className="catalog-group" key={c.id} id={`cat-${c.id}`}>
+              <div className="group-head">
+                <h3><span className={`dot tone-${c.tone}`} />{t(c.title)}</h3>
+                <p>{t(c.blurb)}</p>
+              </div>
+              <div className="card-grid">
+                {items.map((m) => (
+                  <Link key={m.slug} href={`/visualize/${m.slug}`} className={`module-card tone-${c.tone}`}>
+                    <div className="module-thumb"><ModuleThumb view={m.view} seed={m.slug} /></div>
+                    <div className="module-body">
+                      <h4>{t(m.title)}</h4>
+                      <p>{t(m.short)}</p>
+                      <div className="tag-row">{m.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {!filtered.length && <p className="catalog-empty">{t(copy.none)}</p>}
+      </section>
+
+      <section className="loop section">
+        <div className="section-heading inverse">
+          <div><p className="kicker">{t(copy.loopKicker)}</p><h2>{t(copy.loopTitle)}</h2></div>
+        </div>
+        <ol className="loop-grid">
+          {copy.loop.map((s, i) => (
+            <li key={s.t.en}>
+              <span>0{i + 1}</span>
+              <h3>{t(s.t)}</h3>
+              <p>{t(s.d)}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="roadmap section" id="roadmap">
+        <div className="roadmap-intro">
+          <p className="kicker">{t(copy.roadmapKicker)}</p>
+          <h2>{t(copy.roadmapTitle)}</h2>
+          <p>{t(copy.roadmapBody)}</p>
+        </div>
+        <div className="roadmap-list">
+          {roadmap.map((phase, i) => (
+            <article key={phase.weeks}>
+              <span>{phase.weeks}</span>
+              <b>0{i + 1}</b>
+              <div>
+                <h3>{t(phase.title)}</h3>
+                {phase.slugs.length > 0 && (
+                  <div className="roadmap-links">
+                    {phase.slugs.map((s) => {
+                      const m = modules.find((x) => x.slug === s)!;
+                      return <Link key={s} href={`/visualize/${s}`}>{t(m.title)}</Link>;
+                    })}
+                  </div>
+                )}
+              </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="algorithm-lab section" id="algorithms">
-        <div className="section-heading inverse">
-          <div><p className="kicker">{t.coreKicker}</p><h2>{t.coreTitle}</h2></div>
-          <p>{t.coreIntro}</p>
-        </div>
-        <div className="lab-shell">
-          <div className="algorithm-tabs" role="tablist" aria-label="Algorithm examples">
-            {algorithms.map((algorithm, index) => (
-              <button
-                key={algorithm.id}
-                role="tab"
-                aria-selected={activeAlgorithm === algorithm.id}
-                onClick={() => setActiveAlgorithm(algorithm.id)}
-                className={activeAlgorithm === algorithm.id ? "active" : ""}
-              >
-                <span>0{index + 1}</span>{language === "en" ? algorithm.name : algorithm.viName}
-              </button>
-            ))}
-          </div>
-          <div className="algorithm-explainer" role="tabpanel">
-            <div className="algorithm-meta"><span>{selected.family}</span><strong>{selected.complexity}</strong></div>
-            <h3>{language === "en" ? selected.name : selected.viName}</h3>
-            <p><span>{t.invariant}</span>{selected[language]}</p>
-          </div>
-          <div className="code-window">
-            <div className="code-bar"><span /><span /><span /><small>example.py</small></div>
-            <pre><code>{selected.code}</code></pre>
-          </div>
-        </div>
-      </section>
-
-      <section className="complexity section">
-        <div className="complexity-copy">
-          <span className="big-o">O(n)</span>
-          <h2>{t.complexityTitle}</h2>
-          <p>{t.complexityBody}</p>
-        </div>
-        <div className="growth-table">
-          {growth.map(([notation, en, vi], index) => (
-            <div key={notation} style={{ "--row": index } as React.CSSProperties}>
-              <strong>{notation}</strong><span>{language === "en" ? en : vi}</span><i />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="roadmap section" id="roadmap">
-        <div className="roadmap-intro">
-          <p className="kicker">{t.roadmapKicker}</p>
-          <h2>{t.roadmapTitle}</h2>
-          <p>{t.roadmapBody}</p>
-        </div>
-        <div className="roadmap-list">
-          {roadmap.map((phase, index) => (
-            <article key={phase.weeks}><span>{phase.weeks}</span><b>0{index + 1}</b><h3>{phase[language]}</h3></article>
-          ))}
-        </div>
-        <aside className="ritual-card">
-          <p>{t.ritual}</p>
-          <ol>{t.ritualItems.map((item, index) => <li key={item}><span>{index + 1}</span>{item}</li>)}</ol>
-        </aside>
-      </section>
-
       <section className="repo-cta">
         <div>
-          <p className="kicker">{t.repoKicker}</p>
-          <h2>{t.repoTitle}</h2>
+          <p className="kicker">{t(copy.repoKicker)}</p>
+          <h2>{t(copy.repoTitle)}</h2>
         </div>
         <div>
-          <p>{t.repoBody}</p>
-          <a className="button light" href="https://github.com/khaisjsu/algo-atlas" target="_blank" rel="noreferrer">{t.repoButton} <span>↗</span></a>
+          <p>{t(copy.repoBody)}</p>
+          <a className="button light" href="https://github.com/khaisjsu/algo-atlas" target="_blank" rel="noreferrer">{t(copy.repoButton)} <span>↗</span></a>
         </div>
       </section>
-
-      <footer>
-        <a className="brand" href="#top"><span className="brand-mark">A²</span><span>Algo Atlas</span></a>
-        <p>{t.footer}</p>
-        <span>English · Tiếng Việt · 2026</span>
-      </footer>
-    </main>
+    </>
   );
 }

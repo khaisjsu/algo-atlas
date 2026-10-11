@@ -59,6 +59,17 @@ npm install
 npm run dev
 ```
 
+Interactive API:
+
+```text
+GET  /api/health
+GET  /api/modules
+GET  /api/modules/:slug
+POST /api/modules/:slug/run
+```
+
+The API and the website use the same catalog in `app/lib/catalog.ts`. A run request accepts an action id and field values, then returns the executable trace: model, highlighted pseudocode lines, bilingual notes, variable watches, and total step count.
+
 Python examples:
 
 ```bash
