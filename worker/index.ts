@@ -66,11 +66,11 @@ async function handleApi(request: Request, url: URL): Promise<Response> {
   const match = url.pathname.match(/^\/api\/modules\/([^/]+)(?:\/run)?$/);
   if (!match) return json({ error: "Not found" }, 404);
 
-  const module = findModule(match[1]);
-  if (!module) return json({ error: `Unknown module: ${match[1]}` }, 404);
+  const lesson = findModule(match[1]);
+  if (!lesson) return json({ error: `Unknown module: ${match[1]}` }, 404);
 
   if (request.method === "GET" && url.pathname.endsWith("/run") === false) {
-    return json({ module: publicModule(module) });
+    return json({ module: publicModule(lesson) });
   }
 
   if (request.method !== "POST" || !url.pathname.endsWith("/run")) {
@@ -84,12 +84,12 @@ async function handleApi(request: Request, url: URL): Promise<Response> {
     return json({ error: "Request body must be valid JSON." }, 400);
   }
 
-  const action = module.actions.find((candidate) => candidate.id === payload.action) ?? module.actions.find((candidate) => candidate.id !== "create");
+  const action = lesson.actions.find((candidate) => candidate.id === payload.action) ?? lesson.actions.find((candidate) => candidate.id !== "create");
   if (!action) return json({ error: "This module has no executable action." }, 400);
 
-  const result = action.run(module.initial(), payload.values ?? {});
+  const result = action.run(lesson.initial(), payload.values ?? {});
   if ("error" in result) return json({ error: result.error }, 400);
-  return json({ module: module.slug, action: action.id, model: result.model, steps: result.steps, totalSteps: result.steps.length });
+  return json({ module: lesson.slug, action: action.id, model: result.model, steps: result.steps, totalSteps: result.steps.length });
 }
 
 export default worker;

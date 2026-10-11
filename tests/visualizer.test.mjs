@@ -39,3 +39,13 @@ test("unknown visualisations return 404", async () => {
   const res = await get("/visualize/not-a-real-algorithm");
   assert.equal(res.status, 404);
 });
+
+test("API serves the same 28 modules as the website", async () => {
+  const res = await get("/api/modules");
+  assert.equal(res.status, 200);
+  const { modules } = await res.json();
+  assert.equal(modules.length, 28);
+  for (const slug of ["hash-table", "knapsack", "k-means"]) {
+    assert.ok(modules.some((m) => m.slug === slug), `API missing ${slug}`);
+  }
+});

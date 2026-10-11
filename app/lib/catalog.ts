@@ -1,22 +1,12 @@
-import { graphModules } from "./modules/graphs";
-import { linearModules } from "./modules/linear";
-import { searchingModules } from "./modules/searching";
-import { sortingModules } from "./modules/sorting";
-import { treeModules } from "./modules/trees";
-import type { VizModule } from "./types";
+import type { AnyModule } from "./registry";
+import { findModule as findInRegistry, modules } from "./registry";
 
-/** Single source of truth for every interactive lesson exposed to the UI and API. */
-export const moduleCatalog: VizModule[] = [
-  ...sortingModules,
-  ...searchingModules,
-  ...linearModules,
-  ...treeModules,
-  ...graphModules,
-];
+/** Every interactive lesson exposed to the API — the same list the website uses. */
+export const moduleCatalog: AnyModule[] = modules;
 
-export const findModule = (slug: string) => moduleCatalog.find((module) => module.slug === slug);
+export const findModule = findInRegistry;
 
-export const publicModule = (module: VizModule) => ({
+export const publicModule = (module: AnyModule) => ({
   slug: module.slug,
   title: module.title,
   short: module.short,
