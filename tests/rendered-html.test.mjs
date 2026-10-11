@@ -36,3 +36,30 @@ test("includes accessible navigation and language controls", async () => {
   assert.match(html, /aria-pressed="true"/);
   assert.match(css, /prefers-reduced-motion/);
 });
+
+test("serves the interactive algorithm catalog and traces", async () => {
+  const health = await (await render()).text();
+  assert.match(health, /Learn the ideas/);
+
+  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+  workerUrl.searchParams.set("api", `${process.pid}-${Date.now()}`);
+  const { default: worker } = await import(workerUrl.href);
+  const env = { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } };
+  const ctx = { waitUntil() {}, passThroughOnException() {} };
+
+  const catalogResponse = await worker.fetch(new Request("http://localhost/api/modules"), env, ctx);
+  assert.equal(catalogResponse.status, 200);
+  const catalog = await catalogResponse.json();
+  assert.ok(catalog.modules.length >= 20);
+  assert.ok(catalog.modules.some((module) => module.slug === "shortest-paths"));
+
+  const traceResponse = await worker.fetch(new Request("http://localhost/api/modules/bubble-sort/run", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "sort", values: {} }),
+  }), env, ctx);
+  assert.equal(traceResponse.status, 200);
+  const trace = await traceResponse.json();
+  assert.ok(trace.totalSteps > 1);
+  assert.equal(trace.module, "bubble-sort");
+});
